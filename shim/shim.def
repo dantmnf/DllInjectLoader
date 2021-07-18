@@ -1,0 +1,18 @@
+EXPORTS
+    GetFileVersionInfoA=ShimGetFileVersionInfoA @1
+    GetFileVersionInfoByHandle=ShimGetFileVersionInfoByHandle @2
+    GetFileVersionInfoExA=ShimGetFileVersionInfoExA @3
+    GetFileVersionInfoExW=ShimGetFileVersionInfoExW @4
+    GetFileVersionInfoSizeA=ShimGetFileVersionInfoSizeA @5
+    GetFileVersionInfoSizeExA=ShimGetFileVersionInfoSizeExA @6
+    GetFileVersionInfoSizeExW=ShimGetFileVersionInfoSizeExW @7
+    GetFileVersionInfoSizeW=ShimGetFileVersionInfoSizeW @8
+    GetFileVersionInfoW=ShimGetFileVersionInfoW @9
+    VerFindFileA=ShimVerFindFileA @10
+    VerFindFileW=ShimVerFindFileW @11
+    VerInstallFileA=ShimVerInstallFileA @12
+    VerInstallFileW=ShimVerInstallFileW @13
+    VerLanguageNameA=ShimVerLanguageNameA @14
+    VerLanguageNameW=ShimVerLanguageNameW @15
+    VerQueryValueA=ShimVerQueryValueA @16
+    VerQueryValueW=ShimVerQueryValueW @17

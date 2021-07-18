@@ -1,0 +1,17 @@
+declare GetFileVersionInfoA
+declare GetFileVersionInfoByHandle
+declare GetFileVersionInfoExA
+declare GetFileVersionInfoExW
+declare GetFileVersionInfoSizeA
+declare GetFileVersionInfoSizeExA
+declare GetFileVersionInfoSizeExW
+declare GetFileVersionInfoSizeW
+declare GetFileVersionInfoW
+declare VerFindFileA
+declare VerFindFileW
+declare VerInstallFileA
+declare VerInstallFileW
+declare VerLanguageNameA
+declare VerLanguageNameW
+declare VerQueryValueA
+declare VerQueryValueW
