@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <cstdio>
+#include <cwctype>
 #include <string>
 #include <vector>
 #include <format>
@@ -97,7 +98,7 @@ std::string_view trim(std::string_view s) {
 
 std::wstring tolower(std::wstring_view s) {
     std::wstring result(s);
-    std::transform(result.begin(), result.end(), result.begin(), [](auto c) { return std::tolower(c); });
+    std::transform(result.begin(), result.end(), result.begin(), std::towlower);
     return result;
 }
 
