@@ -95,6 +95,12 @@ std::string_view trim(std::string_view s) {
     return ltrim(rtrim(s));
 }
 
+std::wstring tolower(std::wstring_view s) {
+    std::wstring result(s);
+    std::transform(result.begin(), result.end(), result.begin(), std::tolower);
+    return result;
+}
+
 static std::wstring argv0;
 static bool hasConsole;
 
@@ -129,19 +135,22 @@ static void show_error(std::wstring_view message) {
 static void show_usage() {
     auto message = std::format(
 L"Usage: {} [options] target\n"
-"    /setdebugger      set this loader as debugger of target exe with current options\n"
+"Options:\n"
+"    /setdebugger      set loader as debugger of target exe with current options\n"
 "                      in Image File Execution Options\n"
+"    /unsetdebugger    unset debugger of target in Image File Execution Options\n"
 "    /with:dllname     launch target with specified DLL injected\n"
+"                      can be specified multiple times\n"
 "    /noconf           disable reading withdll.conf in target directory\n"
-"    /wait | /nowait   sets if this loader waits for target process to exit\n"
+"    /wait | /nowait   sets if loader waits for target process to exit\n"
 "                      and return its exit code\n"
+"    \n"
+"Without /noconf, loader reads DLL names from withdll.conf in target directory \n"
+"(ANSI encoded, one DLL name each line). \n"
+"DLL names in /with and withdll.conf shoule be basename only (no path separator)\n"
+"as the names are injected into import table.\n"
 "\n"
-"Without /noconf, this loader reads DLL names from withdll.conf (ANSI encoded, one DLL "
-"each line) in target directory. DLL names in /with: and withdll.conf shoule be basename "
-"only (i.e. no path separator) as the names are injected into import table.\n"
-"\n"
-"For more detailed behavior and limitations, "
-"see https://github.com/microsoft/Detours/wiki/DetourCreateProcessWithDlls\n"
+"For more detailed behavior and limitations, see Detours docs.\n"
                                 , argv0);
     show_message(message);
 }
@@ -163,19 +172,23 @@ int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pszCm
     std::vector<std::string> setdlls, confdlls;
     bool noconf = false;
     bool setup = false;
+    bool unset = false;
     std::optional<bool> wait;
     do {
         auto argv1sv = argv1.value();
-        if (argv1sv.compare(0, 6, L"/with:") == 0) {
+        if (tolower(argv1sv.substr(0, 6)) == L"/with:"sv) {
             setdlls.emplace_back(u16toacp(argv1sv.substr(6)));
-        } else if (argv1sv == L"/noconf"sv) {
+        } else if (tolower(argv1sv) == L"/noconf"sv) {
             noconf = true;
-        } else if (argv1sv == L"/nowait"sv) {
+        } else if (tolower(argv1sv) == L"/nowait"sv) {
             wait = false;
-        } else if (argv1sv == L"/wait"sv) {
+        } else if (tolower(argv1sv) == L"/wait"sv) {
             wait = true;
-        } else if (argv1sv == L"/setdebugger"sv) {
+        } else if (tolower(argv1sv) == L"/setdebugger"sv) {
             setup = true;
+        } else if (tolower(argv1sv) == L"/unsetdebugger"sv) {
+            setup = true;
+            unset = true;
         } else if (argv1sv == L"/?"sv) {
             show_usage();
             return 0;
@@ -255,8 +268,13 @@ int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pszCm
             }
             if (noconf) debugger.append(L" /noconf"sv);
             if (wait.has_value()) debugger.append(wait.value() ? L" /wait"sv : L" /nowait"sv);
-            throw_win32_error(RegSetValueExW(keyExeFile, L"Debugger", 0, REG_SZ, reinterpret_cast<const BYTE*>(debugger.data()), debugger.size() * sizeof(wchar_t)));
-            show_message(std::format(L"Successfully set HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\{}::Debugger"sv, keyname));
+            if (unset) {
+                throw_win32_error(RegDeleteKeyValueW(keyExeFile, L"", L"Debugger"));
+                show_message(std::format(L"Successfully cleared debugger for {}"sv, keyname));
+            } else {
+                throw_win32_error(RegSetValueExW(keyExeFile, L"Debugger", 0, REG_SZ, reinterpret_cast<const BYTE*>(debugger.data()), debugger.size() * sizeof(wchar_t)));
+                show_message(std::format(L"Successfully set debugger for {}"sv, keyname));
+            }
             return 0;
         } catch (std::system_error &e) {
             // std::system_error::what() and std::error_code::message() returns in ACP
