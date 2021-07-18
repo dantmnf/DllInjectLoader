@@ -97,7 +97,7 @@ std::string_view trim(std::string_view s) {
 
 std::wstring tolower(std::wstring_view s) {
     std::wstring result(s);
-    std::transform(result.begin(), result.end(), result.begin(), std::tolower);
+    std::transform(result.begin(), result.end(), result.begin(), [](auto c) { return std::tolower(c); });
     return result;
 }
 
